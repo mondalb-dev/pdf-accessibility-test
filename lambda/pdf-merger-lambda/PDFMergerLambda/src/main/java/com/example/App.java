@@ -51,9 +51,9 @@ public class App implements RequestHandler<Map<String, Object>, String> {
                 if (lastSlashIndex != -1) {
                     String directory = key.substring(0, lastSlashIndex + 1); // Include the slash
                     String fileName = key.substring(lastSlashIndex + 1);
-                    return directory + "FINAL_" + fileName;
+                    return directory + "COMPLIANT_" + fileName;
                 } else {
-                    return "FINAL_" + key; // If no directory is found, prepend "FINAL_"
+                    return "COMPLIANT_" + key; // If no directory is found, prepend "FINAL_"
                 }
             })
             .collect(Collectors.toList());

@@ -74,44 +74,44 @@ deploy_backend_solution() {
         print_status "🔐 PDF-to-PDF specific configuration..."
         echo ""
         
-        # Adobe API credentials
-        if [ -z "$ADOBE_CLIENT_ID" ]; then
-            echo "Adobe PDF Services API credentials are required:"
-            echo "(These will be stored securely in AWS Secrets Manager)"
-            read -p "   Enter Adobe API Client ID: " ADOBE_CLIENT_ID
-            print_success "   Client ID received! ✅"
-        fi
+        # # Adobe API credentials
+        # if [ -z "$ADOBE_CLIENT_ID" ]; then
+        #     echo "Adobe PDF Services API credentials are required:"
+        #     echo "(These will be stored securely in AWS Secrets Manager)"
+        #     read -p "   Enter Adobe API Client ID: " ADOBE_CLIENT_ID
+        #     print_success "   Client ID received! ✅"
+        # fi
 
-        if [ -z "$ADOBE_CLIENT_SECRET" ]; then
-            read -p "   Enter Adobe API Client Secret: " ADOBE_CLIENT_SECRET
-            print_success "   Client Secret received! ✅"
-            echo ""
-        fi
+        # if [ -z "$ADOBE_CLIENT_SECRET" ]; then
+        #     read -p "   Enter Adobe API Client Secret: " ADOBE_CLIENT_SECRET
+        #     print_success "   Client Secret received! ✅"
+        #     echo ""
+        # fi
         
-        # Set up Adobe credentials in Secrets Manager
-        print_status "🔒 Setting up Adobe API credentials in AWS Secrets Manager..."
+        # # Set up Adobe credentials in Secrets Manager
+        # print_status "🔒 Setting up Adobe API credentials in AWS Secrets Manager..."
         
-        JSON_TEMPLATE='{
-          "client_credentials": {
-            "PDF_SERVICES_CLIENT_ID": "<Your client ID here>",
-            "PDF_SERVICES_CLIENT_SECRET": "<Your secret ID here>"
-          }
-        }'
+        # JSON_TEMPLATE='{
+        #   "client_credentials": {
+        #     "PDF_SERVICES_CLIENT_ID": "<Your client ID here>",
+        #     "PDF_SERVICES_CLIENT_SECRET": "<Your secret ID here>"
+        #   }
+        # }'
 
-        echo "$JSON_TEMPLATE" | jq --arg cid "$ADOBE_CLIENT_ID" --arg csec "$ADOBE_CLIENT_SECRET" \
-            '.client_credentials.PDF_SERVICES_CLIENT_ID = $cid | 
-             .client_credentials.PDF_SERVICES_CLIENT_SECRET = $csec' > client_credentials.json
+        # echo "$JSON_TEMPLATE" | jq --arg cid "$ADOBE_CLIENT_ID" --arg csec "$ADOBE_CLIENT_SECRET" \
+        #     '.client_credentials.PDF_SERVICES_CLIENT_ID = $cid | 
+        #      .client_credentials.PDF_SERVICES_CLIENT_SECRET = $csec' > client_credentials.json
 
-        if aws secretsmanager create-secret --name /myapp/client_credentials --description "Client credentials for PDF services" --secret-string file://client_credentials.json 2>/dev/null; then
-            print_success "   ✅ Secret created successfully in Secrets Manager!"
-        else
-            aws secretsmanager update-secret --secret-id /myapp/client_credentials --description "Updated client credentials for PDF services" --secret-string file://client_credentials.json
-            print_success "   ✅ Secret updated successfully in Secrets Manager!"
-        fi
+        # if aws secretsmanager create-secret --name /myapp/client_credentials --description "Client credentials for PDF services" --secret-string file://client_credentials.json 2>/dev/null; then
+        #     print_success "   ✅ Secret created successfully in Secrets Manager!"
+        # else
+        #     aws secretsmanager update-secret --secret-id /myapp/client_credentials --description "Updated client credentials for PDF services" --secret-string file://client_credentials.json
+        #     print_success "   ✅ Secret updated successfully in Secrets Manager!"
+        # fi
         
-        # Clean up temporary file
-        rm -f client_credentials.json
-        echo ""
+        # # Clean up temporary file
+        # rm -f client_credentials.json
+        # echo ""
         
     elif [ "$DEPLOYMENT_TYPE" == "pdf2html" ]; then
         print_status "🧠 PDF-to-HTML specific configuration..."
@@ -872,7 +872,7 @@ print_success "✅ AWS credentials verified. Account: $ACCOUNT_ID, Region: $REGI
 echo ""
 
 # GitHub repository URL (hardcoded)
-GITHUB_URL="https://github.com/ASUCICREPO/PDF_Accessibility.git"
+GITHUB_URL="https://github.com/mondalb-dev/pdf-accessibility-test.git"
 print_success "   Repository: $GITHUB_URL ✅"
 echo ""
 
