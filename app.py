@@ -338,39 +338,39 @@ class PDFAccessibility(Stack):
         else:
             lambda_arch = lambda_.Architecture.X86_64
 
-        title_generator_lambda = lambda_.Function(
-            self,
-            "BedrockTitleGeneratorLambda",
-            runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="title_generator.lambda_handler",
-            code=lambda_.Code.from_docker_build("lambda/title-generator-lambda"),
-            timeout=Duration.seconds(900),
-            memory_size=1024,
-            # architecture=lambda_.Architecture.ARM_64
-            architecture=lambda_arch,
-        )
+        # title_generator_lambda = lambda_.Function(
+        #     self,
+        #     "BedrockTitleGeneratorLambda",
+        #     runtime=lambda_.Runtime.PYTHON_3_12,
+        #     handler="title_generator.lambda_handler",
+        #     code=lambda_.Code.from_docker_build("lambda/title-generator-lambda"),
+        #     timeout=Duration.seconds(900),
+        #     memory_size=1024,
+        #     # architecture=lambda_.Architecture.ARM_64
+        #     architecture=lambda_arch,
+        # )
 
         # Grant the Lambda function read/write permissions to the S3 bucket
-        pdf_processing_bucket.grant_read_write(title_generator_lambda)
+        # pdf_processing_bucket.grant_read_write(title_generator_lambda)
 
         # Define the task to invoke the Add Title Lambda function
-        title_generator_lambda_task = tasks.LambdaInvoke(
-            self,
-            "GenerateAccessibleTitle",
-            lambda_function=title_generator_lambda,
-            payload=sfn.TaskInput.from_object({"Payload.$": "$"}),
-        )
+        # title_generator_lambda_task = tasks.LambdaInvoke(
+        #     self,
+        #     "GenerateAccessibleTitle",
+        #     lambda_function=title_generator_lambda,
+        #     payload=sfn.TaskInput.from_object({"Payload.$": "$"}),
+        # )
 
-        # Add the necessary policy to the Lambda function's role
-        title_generator_lambda.add_to_role_policy(cloudwatch_metrics_policy)
+        # # Add the necessary policy to the Lambda function's role
+        # title_generator_lambda.add_to_role_policy(cloudwatch_metrics_policy)
 
-        # Bedrock permissions for title generation models
-        title_generator_lambda.add_to_role_policy(
-            iam.PolicyStatement(
-                actions=["bedrock:InvokeModel"],
-                resources=["*"],
-            )
-        )
+        # # Bedrock permissions for title generation models
+        # title_generator_lambda.add_to_role_policy(
+        #     iam.PolicyStatement(
+        #         actions=["bedrock:InvokeModel"],
+        #         resources=["*"],
+        #     )
+        # )
 
         # Chain the tasks in the state machine
         # chain = pdf_chunks_map_state.next(pdf_merger_lambda_task).next(title_generator_lambda_task)
@@ -445,7 +445,7 @@ class PDFAccessibility(Stack):
 
         remediation_chain = (
             pdf_chunks_map_state.next(pdf_merger_lambda_task)
-            .next(title_generator_lambda_task)
+            # .next(title_generator_lambda_task)
             .next(post_remediation_accessibility_checker_task)
         )
 
@@ -514,9 +514,9 @@ class PDFAccessibility(Stack):
         pdf_merger_lambda_log_group_name = (
             f"/aws/lambda/{pdf_merger_lambda.function_name}"
         )
-        title_generator_lambda_log_group_name = (
-            f"/aws/lambda/{title_generator_lambda.function_name}"
-        )
+        # title_generator_lambda_log_group_name = (
+        #     f"/aws/lambda/{title_generator_lambda.function_name}"
+        # )
         pre_remediation_checker_log_group_name = (
             f"/aws/lambda/{pre_remediation_accessibility_checker.function_name}"
         )

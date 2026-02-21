@@ -66,16 +66,38 @@ def get_secret(basefilename):
     except Exception as e:
         print(f"Filename : {basefilename} | Unexpected error: {e}")
         raise  # Re-raise unexpected exceptions for debugging
-     
+
+def parse_payload(payload):
+    lines = payload.strip().split('\n')
+    data = {}
+    for line in lines:
+        if line.startswith("Bucket:"):
+            data['bucket'] = line.split("Bucket:")[1].strip()
+        elif line.startswith("Merged File Key:"):
+            data['merged_file_key'] = line.split("Merged File Key:")[1].strip()
+        elif line.startswith("Merged File Name:"):
+            data['merged_file_name'] = line.split("Merged File Name:")[1].strip()
+        else:
+            data['status'] = line.strip()
+    return data
 
 def lambda_handler(event, context):
     print("Received event:", event)
     
+    payload = event.get("Payload")
+    file_info = parse_payload(payload)
+    # print(f"(lambda_handler | Parsed file information: {file_info})")
+
+    # file_name = file_info['merged_file_name']
+    # local_path = f'/tmp/{file_name}'
+    # download_file_from_s3(file_info['bucket'], file_info['merged_file_key'], local_path, file_info['merged_file_name'])
+
+
     # Extracting nested values from the event
-    payload = event.get('Payload', {})
-    body = payload.get('body', {})
-    s3_bucket = body.get('bucket')
-    save_path = body.get('save_path')
+    # payload = event.get('Payload', {})
+    # body = payload.get('body', {})
+    s3_bucket = file_info['bucket']
+    save_path = file_info['merged_file_key']
 
     # Validate inputs
     if not s3_bucket or not save_path:
@@ -84,12 +106,13 @@ def lambda_handler(event, context):
     print(f"s3_bucket: {s3_bucket}, save_path: {save_path}")
 
     # Extract file basename using regex
-    pattern = r"COMPLIANT_[^/]*"
-    match = re.search(pattern, save_path)
-    if not match:
-        raise ValueError(f"Pattern '{pattern}' not found in save_path: {save_path}")
+    # pattern = r"COMPLIANT_[^/]*"
+    # match = re.search(pattern, save_path)
+    # if not match:
+    #     raise ValueError(f"Pattern '{pattern}' not found in save_path: {save_path}")
     
-    file_basename = match.group(0)
+    # file_basename = match.group(0)
+    file_basename = os.path.basename(save_path)
     print("File basename:", file_basename)
 
 
