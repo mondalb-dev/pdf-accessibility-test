@@ -14,6 +14,7 @@ import boto3
 import urllib.parse
 import io
 import os
+from pypdf import PdfReader, PdfWriter
 
 # Initialize AWS clients
 cloudwatch = boto3.client('cloudwatch')
@@ -44,7 +45,77 @@ def log_chunk_created(filename):
         'body': 'Metric status updated to failed.'
     }
 
-def split_pdf_into_pages(source_content, original_key, s3_client, bucket_name, pages_per_chunk):
+# def split_pdf_into_pages(source_content, original_key, s3_client, bucket_name, pages_per_chunk):
+#     """
+#     Splits a PDF file into chunks of specified page size and uploads each chunk to S3.
+    
+#     This function takes a PDF file's content, splits it into chunks of the specified number 
+#     of pages, and uploads each chunk back to the S3 bucket. It also returns metadata about 
+#     the uploaded chunks for further processing.
+    
+#     Parameters:
+#         source_content (bytes): The binary content of the PDF file.
+#         original_key (str): The original S3 key of the PDF file.
+#         s3_client (boto3.client): The Boto3 S3 client instance for interacting with S3.
+#         bucket_name (str): The name of the S3 bucket.
+#         pages_per_chunk (int): The number of pages per chunk.
+
+#     Returns:
+#         list: A list of dictionaries containing metadata for each uploaded chunk.
+#     """
+#     from pypdf import PdfReader, PdfWriter
+    
+#     reader = PdfReader(io.BytesIO(source_content))
+#     num_pages = len(reader.pages)
+#     file_basename = original_key.split('/')[-1].rsplit('.', 1)[0]
+    
+#     chunks = []
+
+#     # Iterate through the PDF pages in chunks
+#     for start in range(0, num_pages, pages_per_chunk):
+#         output = io.BytesIO()
+#         writer = PdfWriter()
+
+#         # Add pages to the current chunk
+#         for i in range(start, min(start + pages_per_chunk, num_pages)):
+#             writer.add_page(reader.pages[i])
+
+#         writer.write(output)
+#         output.seek(0)
+
+#         # Create the filename and S3 key for this chunk
+#         chunk_index = start // pages_per_chunk + 1
+#         page_filename = f"{file_basename}_chunk_{chunk_index}.pdf"
+#         s3_key = f"temp/{file_basename}/{page_filename}"
+
+#         # Upload the chunk to S3
+#         s3_client.upload_fileobj(
+#             Fileobj=output,
+#             Bucket=bucket_name,
+#             Key=s3_key
+#         )
+#         print(f'Filename - {page_filename} | Uploaded {page_filename} to S3 at {s3_key}')
+#         # Store metadata for the chunk
+#         chunks.append({
+#             "s3_bucket": bucket_name,
+#             "s3_key": s3_key,
+#             "chunk_key": s3_key  # Key for the chunk
+#         })
+
+#     return chunks
+
+def upload_fileobj(bucket: str, key: str, fileobj):
+    """
+    Uploads a file-like object to S3.
+    """
+    s3 = boto3.client('s3')
+    s3.upload_fileobj(
+        Fileobj=fileobj,
+        Bucket=bucket,
+        Key=key
+    )
+
+def split_pdf_into_pages(source_content: bytes, original_key: str, bucket_name: str, pages_per_chunk: int, site_domain: str, article_key: str):
     """
     Splits a PDF file into chunks of specified page size and uploads each chunk to S3.
     
@@ -55,14 +126,12 @@ def split_pdf_into_pages(source_content, original_key, s3_client, bucket_name, p
     Parameters:
         source_content (bytes): The binary content of the PDF file.
         original_key (str): The original S3 key of the PDF file.
-        s3_client (boto3.client): The Boto3 S3 client instance for interacting with S3.
         bucket_name (str): The name of the S3 bucket.
         pages_per_chunk (int): The number of pages per chunk.
 
     Returns:
         list: A list of dictionaries containing metadata for each uploaded chunk.
     """
-    from pypdf import PdfReader, PdfWriter
     
     reader = PdfReader(io.BytesIO(source_content))
     num_pages = len(reader.pages)
@@ -84,14 +153,18 @@ def split_pdf_into_pages(source_content, original_key, s3_client, bucket_name, p
 
         # Create the filename and S3 key for this chunk
         chunk_index = start // pages_per_chunk + 1
+        # page_filename = f"chunk_{chunk_index}.pdf"
+
+        # s3_key = temp_direcory_prefix(site_domain, article_key) + f"/{page_filename}"
+
         page_filename = f"{file_basename}_chunk_{chunk_index}.pdf"
         s3_key = f"temp/{file_basename}/{page_filename}"
 
         # Upload the chunk to S3
-        s3_client.upload_fileobj(
-            Fileobj=output,
-            Bucket=bucket_name,
-            Key=s3_key
+        upload_fileobj(
+            bucket=bucket_name,
+            key=s3_key,
+            fileobj=output
         )
         print(f'Filename - {page_filename} | Uploaded {page_filename} to S3 at {s3_key}')
         # Store metadata for the chunk
