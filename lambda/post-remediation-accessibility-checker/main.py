@@ -84,8 +84,8 @@ def parse_payload(payload):
 def lambda_handler(event, context):
     print("Received event:", event)
     
-    payload = event.get("Payload")
-    file_info = parse_payload(payload)
+    # payload = event.get("Payload")
+    file_info = parse_payload(event)
     # print(f"(lambda_handler | Parsed file information: {file_info})")
 
     # file_name = file_info['merged_file_name']
