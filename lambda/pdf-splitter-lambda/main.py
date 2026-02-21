@@ -103,6 +103,16 @@ def split_pdf_into_pages(source_content, original_key, s3_client, bucket_name, p
 
     return chunks
 
+def get_object_stream(bucket: str, key: str):
+    """
+    Returns the S3 object Body stream.
+    """
+    s3 = boto3.client('s3')
+    response = s3.get_object(
+        Bucket=bucket,
+        Key=key
+    )
+    return response["Body"]
 
 def lambda_handler(event, context):
     """
@@ -137,10 +147,15 @@ def lambda_handler(event, context):
         s3 = boto3.client('s3')
         stepfunctions = boto3.client('stepfunctions')
 
-        # Get the PDF file from S3
-        response = s3.get_object(Bucket=bucket_name, Key=pdf_file_key)
-        print(f'Filename - {pdf_file_key} | The response is: {response}')
-        pdf_file_content = response['Body'].read()
+        # # Get the PDF file from S3
+        # response = s3.get_object(Bucket=bucket_name, Key=pdf_file_key)
+        # print(f'Filename - {pdf_file_key} | The response is: {response}')
+        # pdf_file_content = response['Body'].read()
+
+        # Download the PDF referenced by the manifest
+        pdf_stream = get_object_stream(bucket=bucket_name, key=pdf_file_key)
+        print(f'Filename - {pdf_file_key} | The response is: {pdf_stream}')
+        pdf_file_content = pdf_stream.read()
   
         # Split the PDF into pages and upload them to S3
         chunks = split_pdf_into_pages(pdf_file_content, pdf_file_key, s3, bucket_name, 200)
