@@ -439,7 +439,7 @@ class PDFAccessibility(Stack):
             self,
             "AuditPostRemediationAccessibility",
             lambda_function=post_remediation_accessibility_checker,
-            payload=sfn.TaskInput.from_json_path_at("$"),
+            payload=sfn.TaskInput.from_object({"Payload.$": "$"}),
             output_path="$.Payload",
         )
 
